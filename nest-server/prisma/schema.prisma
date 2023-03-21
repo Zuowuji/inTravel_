@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("DATABASE_BAK_URL")
+}
+
+model TUser {
+  id         Int          @id @default(autoincrement())
+  userName   String       @unique @map("user_name")
+  password   String
+  nikeName   String?      @map("nike_name")
+  avatar     String?
+  qq         String?
+  wechat     String?
+  email      String?
+  github     String?
+  isDel      Boolean      @default(false) @map("is_del")
+  roleList   TRoleChild[]
+  fileList   TFileList[]
+  updateTime DateTime     @updatedAt @map("update_time")
+
+  @@map("user")
+}
+
+model TRole {
+  id       Int          @id @default(autoincrement())
+  roleName String       @unique @map("role_name")
+  roleList TRoleChild[]
+  menuList TMenuChild[]
+
+  @@map("role")
+}
+
+model TRoleChild {
+  id     Int   @id @default(autoincrement())
+  TRole  TRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId Int   @map("role_id")
+  TUser  TUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int   @map("user_id")
+
+  @@unique([roleId, userId])
+  @@map("role_list")
+}
+
+model TMenu {
+  id       Int          @id @default(autoincrement())
+  menuName String       @unique @map("menu_name")
+  menuList TMenuChild[]
+
+  @@map("menu")
+}
+
+model TMenuChild {
+  id     Int   @id @default(autoincrement())
+  TMenu  TMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId Int   @map("menu_id")
+  TRole  TRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId Int   @map("role_id")
+
+  @@unique([menuId, roleId])
+  @@map("menu_list")
+}
+
+model TFileList {
+  id       Int    @id @default(autoincrement())
+  name     String
+  path     String
+  size     String
+  type     String
+  filename String
+
+  updateTime DateTime @updatedAt @map("update_time")
+  TUser      TUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int      @map("user_id")
+
+  @@unique([name, userId])
+  @@map("file_list")
+}
